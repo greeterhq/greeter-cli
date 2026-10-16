@@ -30,3 +30,6 @@ Thumbs.db
 
 # Executables built by bundler
 /bin/
+
+# Kiro local caches (keep steering, hooks, specs tracked)
+.kiro/**/cache/

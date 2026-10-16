@@ -21,7 +21,7 @@ bundle exec ruby exe/greeter --version # => greeter-cli 0.1.0 (greeter-core 0.1.
 ## Running a release build
 
 Tagged releases publish a versioned distribution tarball to
-[GitHub Releases](https://github.com/adambonsu/greeter-cli/releases). Each
+[GitHub Releases](https://github.com/greeterhq/greeter-cli/releases). Each
 release attaches two assets:
 
 - `greeter-cli-<tag>.tar.gz` — the runnable distribution (`exe/`, `lib/`,
@@ -39,7 +39,7 @@ Replace `v0.1.0` with the release tag you want.
 
 ```bash
 # 1. Download both assets (via gh, or from the Releases page)
-gh release download v0.1.0 --repo adambonsu/greeter-cli
+gh release download v0.1.0 --repo greeterhq/greeter-cli
 
 # 2. Verify integrity, then unpack
 shasum -a 256 -c greeter-cli-v0.1.0.tar.gz.sha256
@@ -91,11 +91,11 @@ but not yet published to RubyGems.
 
 ```ruby
 # Follow the default branch:
-gem 'greeter-core', git: 'https://github.com/adambonsu/greeter-core.git', branch: 'main'
+gem 'greeter-core', git: 'https://github.com/greeterhq/greeter-core.git', branch: 'main'
 
 # …or pin to a tag or commit for reproducibility:
-gem 'greeter-core', git: 'https://github.com/adambonsu/greeter-core.git', tag: 'v0.1.2'
-gem 'greeter-core', git: 'https://github.com/adambonsu/greeter-core.git', ref: 'e6b039c'
+gem 'greeter-core', git: 'https://github.com/greeterhq/greeter-core.git', tag: 'v0.1.2'
+gem 'greeter-core', git: 'https://github.com/greeterhq/greeter-core.git', ref: 'e6b039c'
 ```
 
 With a `git:` source, `bundle update greeter-core` re-resolves against the branch

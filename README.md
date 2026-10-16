@@ -1,5 +1,7 @@
 # greeter-cli
 
+[![CI](https://github.com/greeterhq/greeter-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/greeterhq/greeter-cli/actions/workflows/ci.yml)
+
 A hexagonal CLI greeter. This is the application layer: it owns the driven
 adapters (`CliPresenter`, `SystemClock`) and the composition root
 (`exe/greeter`), and depends on the [`greeter-core`](https://rubygems.org/gems/greeter-core)

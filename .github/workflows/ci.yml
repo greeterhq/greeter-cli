@@ -4,7 +4,7 @@
 # ────
 #  lint      – RuboCop (Linting) — runs first; gates everything below
 #
-#  spec      – RSpec + SimpleCov HTML artifact (Unit Tests)        ┐
+#  spec      – RSpec + SimpleCov HTML artifact (Unit Test)        ┐
 #  bdd       – Cucumber + traceability.json artifact (Functional)   │ parallel,
 #  security  – Brakeman + bundler-audit (Security Test)             │ after lint
 #  perf      – greeting_bench.rb (Performance Test)                 │
@@ -63,7 +63,7 @@ jobs:
 # spec  (Unit Tests — gated on lint)
 # ─────────────────────────────────────────────────────────────────────────────
   spec:
-    name: Unit Tests
+    name: Unit Test
     runs-on: ubuntu-latest
     needs: lint
 

@@ -21,13 +21,13 @@ fileignoreconfig:
 - filename: .amazonq/prompts/opsx-update.md
   checksum: 68e359c55d392d84497d4eb9776a4249bb316d9cd872f99679522116d8e619e0
 - filename: .amazonq/prompts/opsx-verify.md
-  checksum: c355b17ba27f4021e59b7854386429b33b93836fa157a30bc7c65a9c348cb8cb
+  checksum: 8e9477cfd8d3cd757cf4b8200deecf9fd8e1fcec4d890763e60662761c1d2793
 - filename: .amazonq/prompts/opsx-propose.md
   checksum: 1b3c42ce7f4863138564b307d065a4957b9623c5e41c7330c2bbef028694191e
 - filename: .amazonq/prompts/opsx-new.md
   checksum: c43c9b34bbe1c5f7fecc900620314fb34c0c2455c8fbd83ce06cdb1575314979
 - filename: .amazonq/skills/openspec-verify-change/SKILL.md
-  checksum: 79eeadedd815c26ee5cc7e254c8c4e9d0d2589dc0f718efe007c93a2e39638d2
+  checksum: cc751bf8189e101781da31f8e53fedf74a99b4d1b6d886ccfeb1697a34d93687
 - filename: .amazonq/skills/openspec-apply-change/SKILL.md
   checksum: 33e390e7f6d8ab9e257c266856902e85e287fc28109740a68e9a257836e3b6ba
 - filename: .amazonq/skills/openspec-continue-change/SKILL.md
@@ -65,7 +65,7 @@ fileignoreconfig:
 - filename: .kiro/prompts/opsx-archive.prompt.md
   checksum: d5413a26d445f05a7778e75f85f49179988ba5a02d3ffcab2f96f880d64df6cd
 - filename: .kiro/prompts/opsx-verify.prompt.md
-  checksum: 9e5bc21c47a071de2c57d60336a2ff19f23f051d569ca4965767dfbd944dd719
+  checksum: c6bdd8aa10b8aa5ba3dde78a8ec8e3422c834d265433612d3ced275d12aa92db
 - filename: .kiro/skills/openspec-apply-change/SKILL.md
   checksum: 9f7d62c0e3283e40b671c5b1463bab82c2caf93a837f66b4effb7dadb22a4fb1
 - filename: .kiro/skills/openspec-ff-change/SKILL.md
@@ -93,7 +93,7 @@ fileignoreconfig:
 - filename: .kiro/skills/openspec-update-change/SKILL.md
   checksum: 44656478fe34c7901154e60f600e24dda81093528d66e780c07176aad5895264
 - filename: .kiro/skills/openspec-verify-change/SKILL.md
-  checksum: f26a91a4833917534bdb679a6c71f697e6bd2c8775d68a0d45d1e78fce5e091a
+  checksum: d48ac81ec022b040f1ac05525894fa5067e40c7651d1fbd2a427df5aa0907b69
 - filename: .kiro/skills/openspec-bulk-archive-change/SKILL.md
   checksum: aa7ce6008d91f8eaa49bcdc8f12726c6576b7f7d98d2bce79a8b35eaf2ffc312
 - filename: .kiro/skills/openspec-sync-specs/SKILL.md

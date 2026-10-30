@@ -1,0 +1,27 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "protect-tests-during-apply",
+      "description": "Block agent writes to spec/ and features/ unless tmp/allow-test-edits exists",
+      "trigger": "PreToolUse",
+      "matcher": "(write|edit|fs_write)",
+      "action": { "type": "command", "command": "bin/guard-test-edits" }
+    },
+    {
+      "name": "rubocop-on-save",
+      "trigger": "FileSave",
+      "matcher": "\\.rb$",
+      "action": { "type": "command", "command": "bundle exec rubocop -A --fail-level E" }
+    },
+    {
+      "name": "full-suite-when-agent-stops",
+      "trigger": "AgentStop",
+      "action": {
+        "type": "command",
+        "command": "bundle exec rspec && openspec validate --all --strict --no-interactive"
+      },
+      "timeout": 300
+    }
+  ]
+}

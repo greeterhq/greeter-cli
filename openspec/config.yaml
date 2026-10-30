@@ -3,44 +3,49 @@ schema: spec-driven
 context: |
   See AGENTS.md for full project conventions. Summary:
   - This is greeter-cli: the CLI application. Domain + ports live in the
-    greeter-core gem (Greeter::Core); this repo owns the adapters under
-    lib/greeter/adapters that wire the core to real I/O.
+    greeter-core gem (Greeter::Core, from RubyGems, ~> 0.1); this repo owns the
+    adapters under lib/greeter/adapters (CliPresenter, SystemClock) and the
+    composition root exe/greeter.
   - Hexagonal: adapters depend on greeter-core; the core never references adapters.
-  - All collaborators injected via constructor keyword arguments; no globals or singletons
-  - TDD: failing RSpec example before implementation, same commit
+  - All collaborators injected via constructor keyword arguments; no globals or singletons.
+  - CLI contract (do not change in Wave 1):
+    `greeter <name>` -> exit 0, "Hello, <Name>!" on stdout.
+    Invalid name -> exit 2, "Error: <message>" on stderr, nothing on stdout.
+    `greeter --version` / `-v` -> "greeter-cli X (greeter-core Y)", exit 0.
+    There is no count, no persistence and no network access.
+  - TDD: failing test committed before the implementation
+    (test(<change>): red, then feat(<change>): ...).
   - OpenSpec here covers CLI-observable behaviour (arguments, exit codes,
     stdout/stderr). Every scenario maps to exactly one Cucumber scenario tagged
-    with the requirement name. Name-validation rules are owned by greeter-core's
-    OpenSpec and referenced, not re-specified, here.
-  - Ruby 3.3.5, frozen_string_literal on every file, RuboCop clean
+    @requirement-<slug> and @scenario-<slug>. Name-validation rules are owned by
+    greeter-core's OpenSpec and referenced, not re-specified, here.
+  - Shared behaviour across channels is specified in greeter-acceptance, which
+    drives this CLI as a black-box process (CliDriver). Don't duplicate those
+    scenarios here; this repo's features cover CLI-only behaviour.
+  - Ruby 3.3.5, frozen_string_literal on every file, RuboCop clean.
+  Wave 1 changes here: adopt-acceptance-suite (CI job running
+  greeter-acceptance at ACCEPTANCE_REF with GREETER_CHANNEL=cli),
+  adopt-live-docs (traceability v1 writer, docs-refresh dispatch), and
+  add-dependency-scanning. None of them should need changes to exe/ or lib/.
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+rules:
+  proposal:
+    - Include a "Non-goals" section.
+    - State whether exe/ or lib/ changes. In Wave 1 the expected answer is no;
+      if yes, explain why before going further.
+    - Never propose changes to greeter-core from here; describe the need and stop.
+  specs:
+    - Scenarios assert only what a user of the CLI can observe (arguments,
+      exit code, stdout, stderr).
+    - Reference greeter-core's requirement by name instead of restating a name rule.
+  tasks:
+    - First task group is always "Red tests" and lists every feature/spec file to write.
+    - Keep each task under two hours.
+    - Last task group is "Verify and docs" (rspec, cucumber, rubocop, openspec validate).
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
-
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+operations:
+  apply:
+    guidance:
+      - Never edit spec/ or features/ during apply; if a test looks wrong, stop and say why.
+      - For CI-only changes, prove the red step with a failing workflow run and
+        put its URL in the PR description.

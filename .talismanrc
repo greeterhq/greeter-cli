@@ -103,7 +103,7 @@ fileignoreconfig:
 - filename: AGENTS.md
   checksum: f1b60e6fdfe312e4aaea974c94f9508374d4f25d86840c3358e17fd85db87bf5
 - filename: Gemfile.lock
-  checksum: 5e0906c46574cf584bf344ef6fe76dfb1c6ad5ea543a5cfc9b6db88af184bb5d
+  checksum: b56bc5f7ed4952f59bb2149ee1e968f4eef9c00375ea01105a9e2bba37368e00
 - filename: README.md
   checksum: f2a91ec97fbc3277a4c7b036c51f7827e681e5f948d76fda27172c1c93d26a23
 - filename: features/support/env.rb

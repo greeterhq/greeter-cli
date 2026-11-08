@@ -1,0 +1,129 @@
+# .github/workflows/cd.yml
+#
+# Continuous delivery for greeter-cli.
+#
+# Trigger: the "CI" workflow finishing (workflow_run). The release job only
+# runs when that CI run was GREEN, was caused by a push, and was for a v* tag
+# (never for branch or PR builds). CD never re-validates; CI is the gate.
+#
+# greeter is a Ruby CLI, not a compiled binary: exe/greeter requires the
+# greeter-core gem and the app's adapters at runtime. So the "versioned exe" we
+# ship is a self-contained distribution tarball (exe/ + lib/ + Gemfile[.lock]),
+# which a user unpacks and runs with `bundle install && bundle exec exe/greeter`.
+# The tarball is attached to a GitHub Release, giving a durable, public,
+# downloadable, version-named asset (unlike CI artifacts, which expire and
+# require sign-in).
+#
+# NOTE: workflow_run workflows only fire from the copy of cd.yml on the
+# repository's default branch. Merge this file to the default branch before
+# expecting a tag push to trigger it.
+
+name: CD
+
+"on":
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+# Never interrupt an in-flight release.
+concurrency:
+  group: cd-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+env:
+  BUNDLE_JOBS: 4
+  BUNDLE_RETRY: 3
+  # Keep in sync with ci.yml. "3.3" tracks the latest 3.3.x because newer
+  # runner images only build the latest patch of each Ruby series.
+  RUBY_VERSION: "3.3"
+  BUNDLER_VERSION: "2.5.23"
+
+jobs:
+  release:
+    name: Release CLI
+    runs-on: ubuntu-latest
+    # Only after a green CI run triggered by a push of a v* tag.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      startsWith(github.event.workflow_run.head_branch, 'v')
+
+    permissions:
+      contents: write   # required to create the Release and upload assets
+
+    env:
+      # For tag pushes, workflow_run.head_branch is the tag name (e.g. v0.1.0).
+      TAG: ${{ github.event.workflow_run.head_branch }}
+
+    steps:
+      # Check out exactly the commit CI validated, not whatever the default
+      # branch points at now.
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-tags: true
+
+      # head_branch can also be a branch literally named "v...". Confirm it is
+      # a real tag pointing at the validated commit before releasing.
+      - name: Verify ref is a tag at the CI-validated commit
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          git fetch --force --tags origin "refs/tags/${TAG}:refs/tags/${TAG}" \
+            || { echo "::error::${TAG} is not a tag"; exit 1; }
+          tag_sha="$(git rev-list -n 1 "refs/tags/${TAG}")"
+          test "${tag_sha}" = "${HEAD_SHA}" \
+            || { echo "::error::tag ${TAG} (${tag_sha}) != CI commit (${HEAD_SHA})"; exit 1; }
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler: ${{ env.BUNDLER_VERSION }}
+          bundler-cache: true
+
+      # Fail early if the CLI can't even boot with the released dependencies.
+      # Also exercises the --version flag end-to-end.
+      - name: Smoke-test the CLI
+        run: |
+          out="$(bundle exec ruby exe/greeter "Alice")"
+          test "$out" = "Hello, Alice!" || { echo "unexpected output: $out"; exit 1; }
+          bundle exec ruby exe/greeter --version
+
+      # The exact greeter-core version this build resolved to is recorded in
+      # Gemfile.lock — the authoritative source. Expose it for the release notes
+      # so the CLI↔core pairing is discoverable without decoding the tag.
+      - name: Resolve bundled greeter-core version
+        id: core
+        run: |
+          core_version="$(bundle exec ruby -e 'require "greeter/core"; print Greeter::Core::VERSION')"
+          echo "version=${core_version}" >> "$GITHUB_OUTPUT"
+
+      - name: Package versioned CLI tarball
+        run: |
+          pkg="greeter-cli-${TAG}"
+          mkdir -p "dist/${pkg}"
+          # Ship the runnable distribution: the executable, the app's adapter
+          # code, and the pinned dependency manifest.
+          cp -r exe lib Gemfile Gemfile.lock README.md LICENSE "dist/${pkg}/"
+          tar -czf "dist/${pkg}.tar.gz" -C dist "${pkg}"
+          # Checksum so downloaders can verify integrity.
+          ( cd dist && sha256sum "${pkg}.tar.gz" > "${pkg}.tar.gz.sha256" )
+          ls -l dist
+
+      - name: Create GitHub Release and upload the CLI
+        uses: softprops/action-gh-release@v2
+        with:
+          # workflow_run runs against the default branch, so name the tag
+          # explicitly rather than relying on github.ref.
+          tag_name: ${{ env.TAG }}
+          files: |
+            dist/greeter-cli-${{ env.TAG }}.tar.gz
+            dist/greeter-cli-${{ env.TAG }}.tar.gz.sha256
+          # Prepended above the auto-generated notes: records which greeter-core
+          # this CLI release was built against.
+          body: |
+            **greeter-cli ${{ env.TAG }}** — built against **greeter-core ${{ steps.core.outputs.version }}**.
+
+            Run `greeter --version` to confirm the pairing. The exact pinned dependency set is in the bundled `Gemfile.lock`.
+          generate_release_notes: true
+          fail_on_unmatched_files: true

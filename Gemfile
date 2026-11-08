@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 source 'https://rubygems.org'
-ruby '3.3.5'
+ruby '~> 3.3.5'
 
 # Domain core and ports, extracted into a standalone gem.
 # Published at https://rubygems.org/gems/greeter-core

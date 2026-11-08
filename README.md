@@ -9,7 +9,7 @@ gem for the pure domain and ports (`Greeter::Core::Domain`, `Greeter::Core::Port
 
 ## Requirements
 
-- Ruby 3.3.5
+- Ruby 3.3.x
 - Bundler
 
 ## Setup (from source)
@@ -32,7 +32,7 @@ release attaches two assets:
 
 `greeter` is a Ruby CLI, not a compiled binary: `exe/greeter` loads the
 `greeter-core` gem and the app's adapters at runtime. So a release is a
-self-contained snapshot you unpack and run with Bundler — **Ruby 3.3.5 and
+self-contained snapshot you unpack and run with Bundler — **Ruby 3.3.x and
 Bundler are still required** on the target machine.
 
 ### Download, verify, and run

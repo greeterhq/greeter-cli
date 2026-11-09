@@ -48,6 +48,8 @@ fileignoreconfig:
   checksum: c3ddb846dfb9ac4f1b57a71058373325119d6ca7b9b46d80b0444a2e968fb69a
 - filename: .amazonq/skills/openspec-explore/SKILL.md
   checksum: 876a1108aa1e17308218900de76d3b845b201c0dd07b930bd7ad353bd108316d
+- filename: .github/workflows/app-token-smoke.yml
+  checksum: 80e74b4df6c564915342ffc0798b3579c5866909b45ef8de8e902fa5d4224e50
 - filename: .github/workflows/ci.yml
   checksum: 1381768bd22e0a789132a0f19d0dce52864c3586b47ddb7688d3f4c7668a3811
 - filename: .kiro/prompts/opsx-continue.prompt.md
@@ -101,7 +103,7 @@ fileignoreconfig:
 - filename: AGENTS.md
   checksum: f1b60e6fdfe312e4aaea974c94f9508374d4f25d86840c3358e17fd85db87bf5
 - filename: Gemfile.lock
-  checksum: fbcba13ed02cbac5d14ec1f28e2f262d1ccf88aba29e896e5792eb001d530fff
+  checksum: b56bc5f7ed4952f59bb2149ee1e968f4eef9c00375ea01105a9e2bba37368e00
 - filename: README.md
   checksum: f2a91ec97fbc3277a4c7b036c51f7827e681e5f948d76fda27172c1c93d26a23
 - filename: features/support/env.rb

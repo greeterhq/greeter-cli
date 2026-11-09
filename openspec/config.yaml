@@ -22,7 +22,7 @@ context: |
   - Shared behaviour across channels is specified in greeter-acceptance, which
     drives this CLI as a black-box process (CliDriver). Don't duplicate those
     scenarios here; this repo's features cover CLI-only behaviour.
-  - Ruby 3.3.5, frozen_string_literal on every file, RuboCop clean.
+  - Ruby 3.3.x, frozen_string_literal on every file, RuboCop clean.
   Wave 1 changes here: adopt-acceptance-suite (CI job running
   greeter-acceptance at ACCEPTANCE_REF with GREETER_CHANNEL=cli),
   adopt-live-docs (traceability v1 writer, docs-refresh dispatch), and

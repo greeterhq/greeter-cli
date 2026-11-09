@@ -10,8 +10,8 @@
 #  perf      – greeting_bench.rb (Performance Test)                 │
 #  spec-gate – openspec validate (OpenSpec)                         ┘
 #
-#  release   – on v* tags only: package versioned CLI tarball + GitHub Release
-#              (needs: all of the above)
+# Releasing lives in cd.yml, which runs via workflow_run only after this
+# workflow finishes green for a v* tag push.
 
 name: CI
 
@@ -31,7 +31,10 @@ env:
   BUNDLE_JOBS: 4
   BUNDLE_RETRY: 3
   # Single source of truth for the Ruby toolchain across all jobs.
-  RUBY_VERSION: "3.3.5"
+  # "3.3" tracks the latest 3.3.x: newer runner images (ubuntu-26.04, which
+  # ubuntu-latest now resolves to) only build the latest patch of each series,
+  # so an exact pin like 3.3.5 fails with a 404.
+  RUBY_VERSION: "3.3"
   BUNDLER_VERSION: "2.5.23"
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -199,79 +202,3 @@ jobs:
 
       - name: Validate all OpenSpec changes
         run: openspec validate --all --strict --json --no-interactive
-
-# ─────────────────────────────────────────────────────────────────────────────
-# release  (v* tags only — runs only if every other job passed)
-#
-# greeter is a Ruby CLI, not a compiled binary: exe/greeter requires the
-# greeter-core gem and the app's adapters at runtime. So the "versioned exe" we
-# ship is a self-contained distribution tarball (exe/ + lib/ + Gemfile[.lock]),
-# which a user unpacks and runs with `bundle install && bundle exec exe/greeter`.
-# The tarball is attached to a GitHub Release, giving a durable, public,
-# downloadable, version-named asset (unlike CI artifacts, which expire and
-# require sign-in).
-# ─────────────────────────────────────────────────────────────────────────────
-  release:
-    name: Release CLI
-    runs-on: ubuntu-latest
-    # Gate: only when all validation jobs pass...
-    needs: [spec, bdd, lint, security, perf, spec-gate]
-    # ...and only for version tags (never on branch or PR builds).
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    permissions:
-      contents: write   # required to create the Release and upload assets
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: ${{ env.RUBY_VERSION }}
-          bundler: ${{ env.BUNDLER_VERSION }}
-          bundler-cache: true
-
-      # Fail early if the CLI can't even boot with the released dependencies.
-      # Also exercises the --version flag end-to-end.
-      - name: Smoke-test the CLI
-        run: |
-          out="$(bundle exec ruby exe/greeter "Alice")"
-          test "$out" = "Hello, Alice!" || { echo "unexpected output: $out"; exit 1; }
-          bundle exec ruby exe/greeter --version
-
-      # The exact greeter-core version this build resolved to is recorded in
-      # Gemfile.lock — the authoritative source. Expose it for the release notes
-      # so the CLI↔core pairing is discoverable without decoding the tag.
-      - name: Resolve bundled greeter-core version
-        id: core
-        run: |
-          core_version="$(bundle exec ruby -e 'require "greeter/core"; print Greeter::Core::VERSION')"
-          echo "version=${core_version}" >> "$GITHUB_OUTPUT"
-
-      - name: Package versioned CLI tarball
-        run: |
-          version="${GITHUB_REF_NAME}"
-          pkg="greeter-cli-${version}"
-          mkdir -p "dist/${pkg}"
-          # Ship the runnable distribution: the executable, the app's adapter
-          # code, and the pinned dependency manifest.
-          cp -r exe lib Gemfile Gemfile.lock README.md LICENSE "dist/${pkg}/"
-          tar -czf "dist/${pkg}.tar.gz" -C dist "${pkg}"
-          # Checksum so downloaders can verify integrity.
-          ( cd dist && sha256sum "${pkg}.tar.gz" > "${pkg}.tar.gz.sha256" )
-          ls -l dist
-
-      - name: Create GitHub Release and upload the CLI
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            dist/greeter-cli-${{ github.ref_name }}.tar.gz
-            dist/greeter-cli-${{ github.ref_name }}.tar.gz.sha256
-          # Prepended above the auto-generated notes: records which greeter-core
-          # this CLI release was built against.
-          body: |
-            **greeter-cli ${{ github.ref_name }}** — built against **greeter-core ${{ steps.core.outputs.version }}**.
-
-            Run `greeter --version` to confirm the pairing. The exact pinned dependency set is in the bundled `Gemfile.lock`.
-          generate_release_notes: true
-          fail_on_unmatched_files: true

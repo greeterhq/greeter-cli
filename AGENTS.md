@@ -43,6 +43,6 @@ a spec proves the adapter satisfies that contract.
 
 ## Toolchain
 
-- Ruby 3.3.5
+- Ruby 3.3.x
 - `# frozen_string_literal: true` on every file
 - RuboCop clean (no offenses)

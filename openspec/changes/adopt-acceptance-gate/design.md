@@ -62,11 +62,14 @@ tag on the remote and no checkout is present, `target_commitish` is not needed
    `repositories: greeter-acceptance` (exactly one repository), placed in this
    job immediately before use.
 2. A `run:` step with `env:` `GH_TOKEN: ${{ steps.app.outputs.token }}`,
-   `VERSION`, `SHA`, and no values interpolated into the script body. A loop over
-   `prod stage` calls
-   `gh api repos/greeterhq/greeter-acceptance/dispatches -f event_type=channel-released -f 'client_payload[channel]=cli' -f "client_payload[version]=${VERSION}" -f "client_payload[sha]=${SHA}" -f "client_payload[environment]=${environment}"`.
+   `VERSION`, `SHA`, `ENVIRONMENT: ${{ matrix.environment }}`, and no values
+   interpolated into the script body. The job has
+   `strategy: {fail-fast: false, matrix: {environment: [prod, stage]}}`, so it
+   runs once per environment, each run minting its own token, and each calls
+   `gh api repos/greeterhq/greeter-acceptance/dispatches -f event_type=channel-released -f 'client_payload[channel]=cli' -f "client_payload[version]=${VERSION}" -f "client_payload[sha]=${SHA}" -f "client_payload[environment]=${ENVIRONMENT}"`.
+   `fail-fast: false` keeps a failed prod dispatch from cancelling stage.
    Only `-f` (string) fields are used. No `url`, `base_url`, `target`, `address`.
-   Environments are a fixed literal list in the script, not input.
+   The environments are a literal list in the workflow, not input.
 
 **check-acceptance-ref.** Ruby script (`#!/usr/bin/env ruby`, frozen string
 literal), standard library only. Usage: `bin/check-acceptance-ref [workflow]`,
@@ -82,8 +85,14 @@ CI runs it in the `lint` job, after checkout, with no extra setup.
 
 **Testing.** RSpec runs the script as a subprocess (`Open3`) against three
 fixture workflows under `spec/fixtures/acceptance_ref/` (matching, mismatched,
-non-semver), asserting exit status and stderr. Workflow structure is checked by
-`actionlint` (must pass on `cd.yml`) and by review.
+non-semver, plus the fail-closed cases), asserting exit status and stderr.
+`spec/workflows/cd_contract_spec.rb` loads the real `cd.yml` with
+`YAML.safe_load_file(..., aliases: false)` and has one example group per
+workflow scenario, named after it; `CD_WORKFLOW` can point it at another file
+to prove an example can fail. `actionlint` (no arguments) must exit 0. Its
+bundled metadata for `create-github-app-token@v3` lists `app-id` and not
+`client-id`, so `.github/actionlint.yaml` ignores those two messages for
+`cd.yml` only; remove it once actionlint knows `client-id`.
 
 ## Risks / Trade-offs
 
@@ -186,17 +195,46 @@ this repo are pinned by major tag, not SHA, as in `ci.yml`; I am keeping that
 convention for consistency. Recommend a separate change to pin by SHA.
 
 **Not a finding:** `announce` does not need `gate` directly because `release`
-needs it. Both dispatches use the same App token and the same repository.
+needs it. Each `announce` matrix job mints its own App token for the same
+single repository.
 
-## Open Questions
+## Files changed
 
-- Traceability: project rules map every OpenSpec scenario to one Cucumber
-  scenario tagged `@requirement-<slug>`. These scenarios are about workflow
-  and script behaviour, not CLI stdout/exit codes, and the config says
-  scenarios assert only CLI-observable behaviour. Proposed mapping: the three
-  `bin/check-acceptance-ref` scenarios map to RSpec examples (as requested);
-  the four workflow scenarios are verified by `actionlint` plus review, with no
-  Cucumber scenario. Decision needed on whether to add Cucumber scenarios (for
-  example static assertions on `cd.yml`) to satisfy the rule literally, and
-  whether `openspec validate --strict` or `features/support/traceability.rb`
-  requires one per scenario.
+- `.github/workflows/cd.yml` (four jobs, hardening, `announce` matrix)
+- `.github/workflows/ci.yml` (one step in `lint`: `bin/check-acceptance-ref`)
+- `.github/actionlint.yaml` (new; ignores two stale-metadata messages for `cd.yml`)
+- `.gitignore` (`/bin/*` plus `!/bin/check-acceptance-ref`; a `/bin/` directory
+  ignore cannot be re-included, and nothing in `bin/` was tracked)
+- `bin/check-acceptance-ref` (new)
+- `spec/unit/bin/check_acceptance_ref_spec.rb`, `spec/fixtures/acceptance_ref/*.yml` (new)
+- `spec/workflows/cd_contract_spec.rb` (new)
+- `README.md` (release section, acceptance ref bump, prerequisites)
+- `openspec/changes/adopt-acceptance-gate/*`
+
+`exe/` and `lib/` are unchanged.
+
+## Traceability decision
+
+Project rules map each OpenSpec scenario to one tagged Cucumber scenario.
+`features/` describes what a CLI user observes, and the workflow scenarios only
+run on GitHub, so this change adds no Cucumber scenarios. Each scenario is
+instead tied to RSpec examples (table below). The four workflow scenarios also
+get a live run, because the YAML contract cannot prove GitHub's behaviour.
+
+## Verification
+
+Spec files: `U` = `spec/unit/bin/check_acceptance_ref_spec.rb`,
+`C` = `spec/workflows/cd_contract_spec.rb`.
+
+| Requirement / scenario | Spec example that checks it | Live run |
+|---|---|---|
+| Gate failure stops the release | `C` "Gate failure stops the release" (needs chain; no `always()`, `failure()` or `cancelled()`) | <refused run URL v0.1.4> |
+| Gate passes and release uses the same tarball | `C` "Gate passes and release uses the same tarball" (download `cli-tarball`, `sha256sum -c` before publish, same files as uploaded) | <passing run URL v0.1.3> |
+| Release is announced to both environments | `C` "Release is announced to both environments" (matrix exactly `[prod, stage]`, `channel-released`, `channel=cli`, `-f` only) | <passing run URL v0.1.3> |
+| Announce holds only a single-repository App token | `C` "Announce has no ambient token rights" (`permissions: {}`, minted token only, `repositories: greeter-acceptance`, no `${{ }}` in scripts) | <passing run URL v0.1.3> |
+| Matching semver refs pass | `U` "when the gate ref and acceptance_ref match"; `C` "Matching semver refs pass" (real file) | not applicable |
+| Mismatched refs fail | `U` "when the gate ref differs from acceptance_ref" | not applicable |
+| Non-semver ref fails | `U` "when the gate ref is not vX.Y.Z", "when acceptance_ref is not vX.Y.Z" | not applicable |
+| S8 fail-closed (no gate, two gates, wrong repo, missing input) | `U` the four matching contexts | not applicable |
+
+The live-run placeholders are replaced after merge, before archive.

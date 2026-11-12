@@ -54,6 +54,10 @@ jobs:
           bundler: ${{ env.BUNDLER_VERSION }}
           bundler-cache: true
 
+      # cd.yml writes the acceptance gate ref twice (uses: cannot take
+      # expressions); fail here if the two ever drift or stop being vX.Y.Z.
+      - name: Check acceptance gate ref
+        run: bin/check-acceptance-ref
       - name: Run RuboCop
         run: |
           bundle check

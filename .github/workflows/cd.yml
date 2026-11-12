@@ -2,9 +2,26 @@
 #
 # Continuous delivery for greeter-cli.
 #
-# Trigger: the "CI" workflow finishing (workflow_run). The release job only
+# Trigger: the "CI" workflow finishing (workflow_run). Everything below only
 # runs when that CI run was GREEN, was caused by a push, and was for a v* tag
-# (never for branch or PR builds). CD never re-validates; CI is the gate.
+# (never for branch or PR builds). CD never re-validates what CI covers; CI is
+# the first gate and the shared acceptance suite is the second.
+#
+# Job graph (each job needs the one before it, so a failure stops the rest):
+#
+#   package  -> build + smoke-test the tarball, upload it as "cli-tarball"
+#   gate     -> run the shared acceptance suite (greeter-acceptance) against
+#               that exact tarball
+#   release  -> publish the GitHub Release from the SAME tarball the gate
+#               tested (re-verified by sha256, never rebuilt)
+#   announce -> tell the acceptance ledgers about the release
+#               (channel-released for prod and stage)
+#
+# If the gate fails, no Release is created and nothing is announced.
+#
+# The gate's workflow ref (the "@vX.Y.Z" on its `uses:` line) must equal its
+# `acceptance_ref` input. `uses:` cannot take expressions, so the value is
+# written twice; bin/check-acceptance-ref (run in ci.yml) keeps them in sync.
 #
 # greeter is a Ruby CLI, not a compiled binary: exe/greeter requires the
 # greeter-core gem and the app's adapters at runtime. So the "versioned exe" we
@@ -14,22 +31,24 @@
 # downloadable, version-named asset (unlike CI artifacts, which expire and
 # require sign-in).
 #
+# Token model: no job inherits default permissions. `announce` has no
+# GITHUB_TOKEN rights at all; it uses a GitHub App token minted for the single
+# repository greeter-acceptance.
+#
 # NOTE: workflow_run workflows only fire from the copy of cd.yml on the
 # repository's default branch. Merge this file to the default branch before
 # expecting a tag push to trigger it.
-
 name: CD
-
 "on":
   workflow_run:
     workflows: ["CI"]
     types: [completed]
-
 # Never interrupt an in-flight release.
 concurrency:
   group: cd-${{ github.event.workflow_run.head_branch }}
   cancel-in-progress: false
-
+# No job gets default token permissions; each job declares what it needs.
+permissions: {}
 env:
   BUNDLE_JOBS: 4
   BUNDLE_RETRY: 3
@@ -37,32 +56,40 @@ env:
   # runner images only build the latest patch of each Ruby series.
   RUBY_VERSION: "3.3"
   BUNDLER_VERSION: "2.5.23"
-
 jobs:
-  release:
-    name: Release CLI
+  package:
+    name: Package CLI
     runs-on: ubuntu-latest
-    # Only after a green CI run triggered by a push of a v* tag.
+    # Only after a green CI run triggered by a push of a v* tag, from this
+    # repository (not a fork).
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
       startsWith(github.event.workflow_run.head_branch, 'v')
-
     permissions:
-      contents: write   # required to create the Release and upload assets
-
+      contents: read
     env:
       # For tag pushes, workflow_run.head_branch is the tag name (e.g. v0.1.0).
       TAG: ${{ github.event.workflow_run.head_branch }}
-
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      sha: ${{ steps.meta.outputs.sha }}
+      core_version: ${{ steps.core.outputs.version }}
+      tarball_sha256: ${{ steps.pkg.outputs.sha256 }}
     steps:
+      # The tag flows into file names, gate inputs and dispatch payloads, so
+      # accept only plain vX.Y.Z before doing anything else.
+      - name: Validate tag format
+        run: |
+          [[ "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+            || { echo "::error::tag must look like vX.Y.Z"; exit 1; }
       # Check out exactly the commit CI validated, not whatever the default
       # branch points at now.
       - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-tags: true
-
       # head_branch can also be a branch literally named "v...". Confirm it is
       # a real tag pointing at the validated commit before releasing.
       - name: Verify ref is a tag at the CI-validated commit
@@ -74,13 +101,19 @@ jobs:
           tag_sha="$(git rev-list -n 1 "refs/tags/${TAG}")"
           test "${tag_sha}" = "${HEAD_SHA}" \
             || { echo "::error::tag ${TAG} (${tag_sha}) != CI commit (${HEAD_SHA})"; exit 1; }
-
+      # Expose the verified tag and commit to the later jobs.
+      - name: Record tag and commit
+        id: meta
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "sha=${HEAD_SHA}" >> "$GITHUB_OUTPUT"
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ env.RUBY_VERSION }}
           bundler: ${{ env.BUNDLER_VERSION }}
           bundler-cache: true
-
       # Fail early if the CLI can't even boot with the released dependencies.
       # Also exercises the --version flag end-to-end.
       - name: Smoke-test the CLI
@@ -88,7 +121,6 @@ jobs:
           out="$(bundle exec ruby exe/greeter "Alice")"
           test "$out" = "Hello, Alice!" || { echo "unexpected output: $out"; exit 1; }
           bundle exec ruby exe/greeter --version
-
       # The exact greeter-core version this build resolved to is recorded in
       # Gemfile.lock — the authoritative source. Expose it for the release notes
       # so the CLI↔core pairing is discoverable without decoding the tag.
@@ -97,8 +129,8 @@ jobs:
         run: |
           core_version="$(bundle exec ruby -e 'require "greeter/core"; print Greeter::Core::VERSION')"
           echo "version=${core_version}" >> "$GITHUB_OUTPUT"
-
       - name: Package versioned CLI tarball
+        id: pkg
         run: |
           pkg="greeter-cli-${TAG}"
           mkdir -p "dist/${pkg}"
@@ -108,8 +140,60 @@ jobs:
           tar -czf "dist/${pkg}.tar.gz" -C dist "${pkg}"
           # Checksum so downloaders can verify integrity.
           ( cd dist && sha256sum "${pkg}.tar.gz" > "${pkg}.tar.gz.sha256" )
+          # The hash the gate tests; the release job re-checks it.
+          echo "sha256=$(cut -d' ' -f1 "dist/${pkg}.tar.gz.sha256")" >> "$GITHUB_OUTPUT"
           ls -l dist
+      # The one tarball the gate tests and the release publishes.
+      - name: Upload CLI tarball
+        uses: actions/upload-artifact@v6
+        with:
+          name: cli-tarball
+          path: |
+            dist/greeter-cli-${{ env.TAG }}.tar.gz
+            dist/greeter-cli-${{ env.TAG }}.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 7
 
+  # Shared acceptance suite, run against the packaged tarball. The ref after
+  # "@" must equal acceptance_ref (checked by bin/check-acceptance-ref).
+  gate:
+    name: Acceptance gate
+    needs: package
+    permissions:
+      contents: read
+    uses: greeterhq/greeter-acceptance/.github/workflows/gate.yml@v0.2.0
+    with:
+      acceptance_ref: v0.2.0
+      channel: cli
+      candidate_version: ${{ needs.package.outputs.tag }}
+      candidate_sha: ${{ needs.package.outputs.sha }}
+      artifact_name: cli-tarball
+      artifact_file: greeter-cli-${{ needs.package.outputs.tag }}.tar.gz
+
+  release:
+    name: Release CLI
+    needs: [package, gate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required to create the Release and upload assets
+    env:
+      TAG: ${{ needs.package.outputs.tag }}
+    steps:
+      - name: Download the tested tarball
+        uses: actions/download-artifact@v8
+        with:
+          name: cli-tarball
+          path: dist
+      # Prove this is the file the gate tested before publishing it.
+      - name: Verify tarball integrity
+        env:
+          EXPECTED_SHA256: ${{ needs.package.outputs.tarball_sha256 }}
+        run: |
+          cd dist
+          sha256sum -c "greeter-cli-${TAG}.tar.gz.sha256"
+          actual="$(sha256sum "greeter-cli-${TAG}.tar.gz" | cut -d' ' -f1)"
+          test "${actual}" = "${EXPECTED_SHA256}" \
+            || { echo "::error::tarball ${actual} != packaged ${EXPECTED_SHA256}"; exit 1; }
       - name: Create GitHub Release and upload the CLI
         uses: softprops/action-gh-release@v2
         with:
@@ -122,8 +206,45 @@ jobs:
           # Prepended above the auto-generated notes: records which greeter-core
           # this CLI release was built against.
           body: |
-            **greeter-cli ${{ env.TAG }}** — built against **greeter-core ${{ steps.core.outputs.version }}**.
-
+            **greeter-cli ${{ env.TAG }}** — built against **greeter-core ${{ needs.package.outputs.core_version }}**.
             Run `greeter --version` to confirm the pairing. The exact pinned dependency set is in the bundled `Gemfile.lock`.
           generate_release_notes: true
           fail_on_unmatched_files: true
+
+  # Tell the acceptance ledgers about the release. No GITHUB_TOKEN rights: the
+  # only credential is a GitHub App token for greeter-acceptance alone.
+  announce:
+    name: Announce release (${{ matrix.environment }})
+    needs: [package, release]
+    runs-on: ubuntu-latest
+    permissions: {}
+    # One job per environment, each with its own freshly minted token. Let both
+    # run even if one fails, so a prod hiccup does not suppress stage.
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [prod, stage]
+    steps:
+      - name: Mint single-repository App token
+        id: app
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.DISPATCH_APP_CLIENT_ID }}
+          private-key: ${{ secrets.DISPATCH_APP_PRIVATE_KEY }}
+          owner: greeterhq
+          repositories: greeter-acceptance
+          # repository_dispatch needs only contents: write on the target.
+          permission-contents: write
+      - name: Send channel-released
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          VERSION: ${{ needs.package.outputs.tag }}
+          SHA: ${{ needs.package.outputs.sha }}
+          ENVIRONMENT: ${{ matrix.environment }}
+        run: |
+          gh api --method POST repos/greeterhq/greeter-acceptance/dispatches \
+            -f event_type=channel-released \
+            -f 'client_payload[channel]=cli' \
+            -f "client_payload[version]=${VERSION}" \
+            -f "client_payload[sha]=${SHA}" \
+            -f "client_payload[environment]=${ENVIRONMENT}"

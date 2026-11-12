@@ -31,7 +31,10 @@ Thumbs.db
 *.swo
 
 # Executables built by bundler
-/bin/
+/bin/*
+# Tracked: run by ci.yml (lint job). A directory ignore (/bin/) could not be
+# re-included, hence /bin/* above.
+!/bin/check-acceptance-ref
 
 # Kiro local caches (keep steering, hooks, specs tracked)
 .kiro/**/cache/

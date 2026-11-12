@@ -1,0 +1,66 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Fails unless the ref on the acceptance gate's `uses:` line equals its
+# `acceptance_ref` input and both are vX.Y.Z.
+#
+# Usage: bin/check-acceptance-ref [path/to/workflow.yml]
+#        (default: .github/workflows/cd.yml)
+#
+# Fail-closed: no gate job, several gate jobs, a gate from another repository
+# or path, or a missing acceptance_ref input are all errors.
+
+require 'yaml'
+
+GATE_USES = %r{\Agreeterhq/greeter-acceptance/\.github/workflows/gate\.yml@(?<ref>.+)\z}
+GATE_LIKE = %r{/workflows/gate\.yml@}
+SEMVER    = /\Av\d+\.\d+\.\d+\z/
+DEFAULT_WORKFLOW = '.github/workflows/cd.yml'
+
+def fail_with(*messages)
+  messages.each { |message| warn("check-acceptance-ref: #{message}") }
+  exit 1
+end
+
+def load_jobs(path)
+  fail_with("cannot read #{path}") unless File.file?(path)
+  document = YAML.safe_load_file(path)
+  jobs = document.is_a?(Hash) ? document['jobs'] : nil
+  fail_with("#{path} has no jobs") unless jobs.is_a?(Hash)
+  jobs
+rescue Psych::Exception => e
+  fail_with("cannot parse #{path}: #{e.message}")
+end
+
+def gate_job?(id, job)
+  return false unless job.is_a?(Hash) && job['uses'].is_a?(String)
+
+  id == 'gate' || job['uses'].match?(GATE_LIKE)
+end
+
+def semver_errors(label, ref)
+  return [] if ref.is_a?(String) && ref.match?(SEMVER)
+
+  ["#{label} #{ref.inspect} is not of the form vX.Y.Z"]
+end
+
+path = ARGV.fetch(0, DEFAULT_WORKFLOW)
+gates = load_jobs(path).select { |id, job| gate_job?(id, job) }
+
+fail_with("no gate job found in #{path}") if gates.empty?
+fail_with("exactly one gate job is allowed, found #{gates.size}: #{gates.keys.join(', ')}") if gates.size > 1
+
+id, job = gates.first
+uses = job['uses']
+match = GATE_USES.match(uses)
+fail_with("gate job #{id} uses unexpected workflow #{uses}") unless match
+
+uses_ref = match[:ref]
+input_ref = (job['with'] || {})['acceptance_ref']
+fail_with("acceptance_ref input is missing on gate job #{id}") if input_ref.nil?
+
+errors = semver_errors('gate uses ref', uses_ref) + semver_errors('acceptance_ref', input_ref)
+errors << "gate uses ref #{uses_ref} differs from acceptance_ref #{input_ref}" unless uses_ref == input_ref
+fail_with(*errors) unless errors.empty?
+
+puts "ok: gate uses ref and acceptance_ref are both #{uses_ref}"

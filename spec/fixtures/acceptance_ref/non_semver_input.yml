@@ -1,0 +1,11 @@
+name: CD
+"on":
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+jobs:
+  gate:
+    uses: greeterhq/greeter-acceptance/.github/workflows/gate.yml@v0.2.0
+    with:
+      acceptance_ref: v0.2
+      channel: cli

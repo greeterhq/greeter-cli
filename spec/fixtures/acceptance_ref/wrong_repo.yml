@@ -1,0 +1,11 @@
+name: CD
+"on":
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+jobs:
+  gate:
+    uses: someoneelse/other/.github/workflows/gate.yml@v0.2.0
+    with:
+      acceptance_ref: v0.2.0
+      channel: cli

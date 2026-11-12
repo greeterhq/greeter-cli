@@ -1,0 +1,9 @@
+# Works around actionlint's bundled metadata for actions/create-github-app-token@v3,
+# which still lists `app-id` and does not know `client-id`. The action's v3
+# documentation uses `client-id`, which is what cd.yml passes.
+# Remove this file once actionlint lists `client-id` for that action.
+paths:
+  .github/workflows/cd.yml:
+    ignore:
+      - 'missing input "app-id" which is required by action .*actions/create-github-app-token@v3'
+      - 'input "client-id" is not defined in action .*actions/create-github-app-token@v3'

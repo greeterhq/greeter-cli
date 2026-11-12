@@ -152,9 +152,19 @@ Test doubles (`FakeClock`, `FixedClock`) ship in the gem under
 
 ## Cutting a release (maintainers)
 
-Releases are produced by the `release` job in `.github/workflows/ci.yml`. It runs
-**only** on version tags and **only** if every other CI job passes, then packages
-the tarball and creates the GitHub Release.
+Releases are produced by `.github/workflows/cd.yml`, which runs after the `CI`
+workflow finishes **green for a `v*` tag push**. It is four chained jobs:
+
+1. `package` builds and smoke-tests the tarball and uploads it as the
+   `cli-tarball` artifact.
+2. `gate` runs the shared acceptance suite from `greeter-acceptance` against
+   that exact tarball.
+3. `release` publishes the GitHub Release from the same tarball (re-checked by
+   sha256, never rebuilt).
+4. `announce` sends a `channel-released` event to `greeter-acceptance` for
+   `prod` and `stage`.
+
+If the gate fails, no Release is created and nothing is announced.
 
 1. Bump `Greeter::Cli::VERSION` in `lib/greeter/cli/version.rb` to match the tag
    you intend to push (the tag drives the asset name; the constant drives what
@@ -167,10 +177,29 @@ the tarball and creates the GitHub Release.
    git push origin v0.1.0
    ```
 
-The tag must start with `v` (e.g. `v0.1.0`). The workflow triggers on
-`tags: ["v*"]` and the release job guards on `refs/tags/v`, so a bare `0.1.0`
+The tag must be exactly `vX.Y.Z` (e.g. `v0.1.0`). CI triggers on `tags: ["v*"]`
+and the `package` job rejects any tag that is not `vX.Y.Z`, so a bare `0.1.0`
 tag is ignored and produces no release. The resulting assets are named from the
 tag (`greeter-cli-v0.1.0.tar.gz`).
+
+### Acceptance gate
+
+The gate is the reusable workflow
+`greeterhq/greeter-acceptance/.github/workflows/gate.yml`. Its version appears
+twice in `cd.yml`: as the `@vX.Y.Z` on the `uses:` line (which cannot take an
+expression) and as the `acceptance_ref` input. To move to a new acceptance
+release, change **both** to the same `vX.Y.Z`. `bin/check-acceptance-ref` runs
+in CI and fails if they differ or are not `vX.Y.Z`; you can run it locally.
+
+Maintainer prerequisites (one-time):
+
+- Repository variable `DISPATCH_APP_CLIENT_ID` and secret
+  `DISPATCH_APP_PRIVATE_KEY` for a GitHub App installed on
+  `greeterhq/greeter-acceptance` with Contents: write (needed to send
+  `repository_dispatch`).
+- A tag ruleset in `greeterhq/greeter-acceptance` that protects `v*` tags from
+  update and deletion. The gate is referenced by tag, so a moved tag would
+  change what runs in this pipeline.
 
 See `AGENTS.md` for full project conventions and `openspec/` for the
 specification of CLI-observable behaviour.

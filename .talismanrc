@@ -108,6 +108,12 @@ fileignoreconfig:
   checksum: f2a91ec97fbc3277a4c7b036c51f7827e681e5f948d76fda27172c1c93d26a23
 - filename: features/support/env.rb
   checksum: 82212114dad225e29e5f8afa8867362c378ac9f1b8c07165728810830cab7964
+- filename: openspec/changes/adopt-acceptance-gate/specs/release/acceptance-gate/spec.md
+  checksum: 8ad4233061cc78f894616d7bcb6b60f5ee6c93222368bcac1d83418ea35de65b
+- filename: openspec/changes/adopt-acceptance-gate/tasks.md
+  checksum: 7acc77f06bdab769a277be09640ebd6df12e2fea47081d6d9d2225e23990b680
+- filename: openspec/changes/adopt-acceptance-gate/design.md
+  checksum: 95d8b0048c97bd9a4d4d90eeaa7da1ec141ec7db73662e03639fe7151efc8a6b
 - filename: openspec/changes/archive/2026-09-25-add-hello-world-greeting/proposal.md
   checksum: bef1d309e3e9f6825e3dbab324ad77806bbaf1f75dad06ffa69a4234396b3b0c
 - filename: openspec/changes/archive/2026-09-25-add-hello-world-greeting/tasks.md

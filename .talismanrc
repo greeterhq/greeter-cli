@@ -120,4 +120,6 @@ fileignoreconfig:
   checksum: 658210f9a7e5e40a6617fb7366d1c0b0ff6226195f5fcf24d5dfe73bbff2ab8e
 - filename: openspec/changes/archive/2026-09-25-add-hello-world-greeting/design.md
   checksum: 1662ec6410f25d27c4283dd5170b870dcaa20b5901b132c38ae4d0f5ac969fe6
+- filename: spec/workflows/cd_contract_spec.rb
+  checksum: 81daccb779e1481a6ca81ef636fcc7fdd92f8f71191c3da226bafc497e816120
   version: ""

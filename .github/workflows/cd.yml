@@ -161,9 +161,9 @@ jobs:
     needs: package
     permissions:
       contents: read
-    uses: greeterhq/greeter-acceptance/.github/workflows/gate.yml@v0.2.0
+    uses: greeterhq/greeter-acceptance/.github/workflows/gate.yml@v0.2.2
     with:
-      acceptance_ref: v0.2.0
+      acceptance_ref: v0.2.2
       channel: cli
       candidate_version: ${{ needs.package.outputs.tag }}
       candidate_sha: ${{ needs.package.outputs.sha }}

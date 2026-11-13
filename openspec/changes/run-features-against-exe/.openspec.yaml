@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-11-13
+# No CLI-observable behaviour changes: the cli-greeter requirements and
+# scenarios stay as they are. Only how the features verify them changes.
+skip_specs: true

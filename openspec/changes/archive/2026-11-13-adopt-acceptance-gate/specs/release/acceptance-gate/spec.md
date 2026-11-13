@@ -1,3 +1,7 @@
+## Purpose
+
+Gates every CLI release on the shared acceptance suite, publishes only the tarball the gate tested, and announces each release to the acceptance ledgers.
+
 ## ADDED Requirements
 
 ### Requirement: Failed acceptance gate blocks release and announcement

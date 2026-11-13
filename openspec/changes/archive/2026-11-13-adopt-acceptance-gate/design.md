@@ -228,13 +228,16 @@ Spec files: `U` = `spec/unit/bin/check_acceptance_ref_spec.rb`,
 
 | Requirement / scenario | Spec example that checks it | Live run |
 |---|---|---|
-| Gate failure stops the release | `C` "Gate failure stops the release" (needs chain; no `always()`, `failure()` or `cancelled()`) | <refused run URL v0.1.4> |
-| Gate passes and release uses the same tarball | `C` "Gate passes and release uses the same tarball" (download `cli-tarball`, `sha256sum -c` before publish, same files as uploaded) | <passing run URL v0.1.3> |
-| Release is announced to both environments | `C` "Release is announced to both environments" (matrix exactly `[prod, stage]`, `channel-released`, `channel=cli`, `-f` only) | <passing run URL v0.1.3> |
-| Announce holds only a single-repository App token | `C` "Announce has no ambient token rights" (`permissions: {}`, minted token only, `repositories: greeter-acceptance`, no `${{ }}` in scripts) | <passing run URL v0.1.3> |
+| Gate failure stops the release | `C` "Gate failure stops the release" (needs chain; no `always()`, `failure()` or `cancelled()`) | [v0.1.11 refused](https://github.com/greeterhq/greeter-cli/actions/runs/43421386538) |
+| Gate passes and release uses the same tarball | `C` "Gate passes and release uses the same tarball" (download `cli-tarball`, `sha256sum -c` before publish, same files as uploaded) | [v0.1.12 passed](https://github.com/greeterhq/greeter-cli/actions/runs/43426760661) |
+| Release is announced to both environments | `C` "Release is announced to both environments" (matrix exactly `[prod, stage]`, `channel-released`, `channel=cli`, `-f` only) | [v0.1.12 passed](https://github.com/greeterhq/greeter-cli/actions/runs/43426760661) |
+| Announce holds only a single-repository App token | `C` "Announce has no ambient token rights" (`permissions: {}`, minted token only, `repositories: greeter-acceptance`, no `${{ }}` in scripts) | [v0.1.12 passed](https://github.com/greeterhq/greeter-cli/actions/runs/43426760661) |
 | Matching semver refs pass | `U` "when the gate ref and acceptance_ref match"; `C` "Matching semver refs pass" (real file) | not applicable |
 | Mismatched refs fail | `U` "when the gate ref differs from acceptance_ref" | not applicable |
 | Non-semver ref fails | `U` "when the gate ref is not vX.Y.Z", "when acceptance_ref is not vX.Y.Z" | not applicable |
 | S8 fail-closed (no gate, two gates, wrong repo, missing input) | `U` the four matching contexts | not applicable |
 
-The live-run placeholders are replaced after merge, before archive.
+Live runs: v0.1.11 was a throwaway build whose `exe/greeter` exited 9 for an
+invalid name; the gate failed at "Run the suite against the candidate" and
+"Decide the gate" (`greeting-invalid error`), and `release` and `announce` were
+skipped. v0.1.12 is a real release; every job passed and both ledgers recorded it.

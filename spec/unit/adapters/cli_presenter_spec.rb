@@ -16,14 +16,14 @@ RSpec.describe Greeter::Adapters::CliPresenter do
   end
 
   # Scenario: Greets a named guest
-  it "writes 'Hello, Alice!' to the injected IO" do
+  it "writes 'Howdy, Alice!' to the injected IO" do
     presenter.present(build_greeting(name: 'Alice'))
-    expect(output.string).to eq("Hello, Alice!\n")
+    expect(output.string).to eq("Howdy, Alice!\n")
   end
 
   # Scenario: Normalises casing and whitespace
   it 'uses the display value from GuestName, reflecting normalised casing' do
     presenter.present(build_greeting(name: '  alice smith  '))
-    expect(output.string).to eq("Hello, Alice Smith!\n")
+    expect(output.string).to eq("Howdy, Alice Smith!\n")
   end
 end

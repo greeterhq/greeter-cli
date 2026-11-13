@@ -10,7 +10,7 @@ module Greeter
       end
 
       def present(greeting)
-        @output.puts("Hello, #{greeting.guest_name.display}!")
+        @output.puts("Howdy, #{greeting.guest_name.display}!")
       end
     end
   end

@@ -7,13 +7,13 @@ Feature: Guest greeting
   Scenario: Greets a named guest
     When the CLI is invoked with the name "Alice"
     Then the exit code is 0
-    And stdout contains "Hello, Alice!"
+    And stdout contains "Howdy, Alice!"
 
   @scenario-normalises-casing-and-whitespace
   Scenario: Normalises casing and whitespace
     When the CLI is invoked with the name "  alice smith  "
     Then the exit code is 0
-    And stdout contains "Hello, Alice Smith!"
+    And stdout contains "Howdy, Alice Smith!"
 
   @scenario-rejects-an-empty-or-whitespace-only-name
   Scenario: Rejects an empty or whitespace-only name

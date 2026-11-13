@@ -119,7 +119,7 @@ jobs:
       - name: Smoke-test the CLI
         run: |
           out="$(bundle exec ruby exe/greeter "Alice")"
-          test "$out" = "Howdy, Alice!" || { echo "unexpected output: $out"; exit 1; }
+          test "$out" = "Hello, Alice!" || { echo "unexpected output: $out"; exit 1; }
           bundle exec ruby exe/greeter --version
       # The exact greeter-core version this build resolved to is recorded in
       # Gemfile.lock — the authoritative source. Expose it for the release notes

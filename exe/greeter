@@ -24,5 +24,5 @@ begin
   presenter.present(greeting)
 rescue Greeter::Core::Domain::InvalidGuestName => e
   warn("Error: #{e.message}")
-  exit 2
+  exit 9
 end

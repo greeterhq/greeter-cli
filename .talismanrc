@@ -125,6 +125,22 @@ fileignoreconfig:
   checksum: 1662ec6410f25d27c4283dd5170b870dcaa20b5901b132c38ae4d0f5ac969fe6
 - filename: openspec/specs/release/acceptance-gate/spec.md
   checksum: df25de0674b861a76a5f368f3e2e91c0525d70d8824195dd99341cc9f8b61d72
+- filename: spec/unit/support/repo_trace_formatter_spec.rb
+  checksum: 29a0f2c5cb31dd76030c3e4868ef180a626a319125dd9ea718c1f9bca617cf18
+- filename: spec/unit/support/cucumber_repo_trace_spec.rb
+  checksum: 7ad5b780e0c0d15444902d7f4ef8d867795dfc8c08d842ffb54996f0c8b25247
+- filename: spec/fixtures/repo_trace/plain.rb
+  checksum: f6f87957b2f9966485fa282fe818f25131d9a7159dea9922202832d71df79fed
+- filename: spec/fixtures/repo_trace/statuses.rb
+  checksum: 7bec42ae2779f45a882eed753ca4082b63c729a5841f21c6918defa9bb2649f5
+- filename: spec/unit/bin/merge_repo_trace_spec.rb
+  checksum: 95147692f7bd662843c73339caa73819fa8913adfdfe28ba76e0a17ad0b69459
+- filename: spec/unit/support/repo_trace_document_spec.rb
+  checksum: 036ee07b0b92db2c4bd282fd6cf441dddc1f823ffd384d09b1eea01cb7c53bdf
+- filename: spec/unit/support/slug_spec.rb
+  checksum: 310877f850d9b810dbf2ad649ae9893407edea9c73a49a5c02829113f677ff99
+- filename: spec/workflows/ci_contract_spec.rb
+  checksum: 54429bfc4952f1a8b7d55d1584113653a970abf1796d5641155731b08e0add4b  
 - filename: spec/workflows/cd_contract_spec.rb
   checksum: 81daccb779e1481a6ca81ef636fcc7fdd92f8f71191c3da226bafc497e816120
   version: ""

@@ -30,9 +30,12 @@ Write the failing RSpec example before the implementation, in the same commit.
 
 ## OpenSpec ↔ Cucumber traceability
 
-This app's OpenSpec covers CLI-observable behaviour (arguments, exit codes,
-stdout/stderr). Every OpenSpec scenario maps to exactly one Cucumber scenario,
+The `greeting/cli-greeter` capability covers CLI-observable behaviour (arguments, exit codes,
+stdout/stderr). Each of its OpenSpec scenarios maps to exactly one Cucumber scenario,
 tagged with the requirement name.
+The `release/` and `tooling/` capabilities (`acceptance-gate`, `live-docs-traceability`)
+describe pipeline and tooling behaviour and are verified by RSpec examples tagged
+`requirement:`/`scenario:`.
 
 Name-validation and domain rules are owned by `greeter-core`'s OpenSpec (mapped
 there to RSpec examples). This app references those rules where the CLI surfaces

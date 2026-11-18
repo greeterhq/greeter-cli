@@ -15,9 +15,12 @@ context: |
     There is no count, no persistence and no network access.
   - TDD: failing test committed before the implementation
     (test(<change>): red, then feat(<change>): ...).
-  - OpenSpec here covers CLI-observable behaviour (arguments, exit codes,
-    stdout/stderr). Every scenario maps to exactly one Cucumber scenario tagged
-    @requirement-<slug> and @scenario-<slug>. Name-validation rules are owned by
+  - The greeting/cli-greeter capability covers CLI-observable behaviour (arguments, exit codes,
+    stdout/stderr). Each of its scenarios maps to exactly one Cucumber scenario tagged
+    @requirement-<slug> and @scenario-<slug>.
+  - The release/ and tooling/ capabilities (acceptance-gate, live-docs-traceability)
+    describe pipeline and tooling behaviour and are verified by RSpec examples
+    tagged requirement:/scenario:. Name-validation rules are owned by
     greeter-core's OpenSpec and referenced, not re-specified, here.
   - Shared behaviour across channels is specified in greeter-acceptance, which
     drives this CLI as a black-box process (CliDriver). Don't duplicate those
@@ -35,8 +38,10 @@ rules:
       if yes, explain why before going further.
     - Never propose changes to greeter-core from here; describe the need and stop.
   specs:
-    - Scenarios assert only what a user of the CLI can observe (arguments,
+    - In greeting/cli-greeter, scenarios assert only what a user of the CLI can observe (arguments,
       exit code, stdout, stderr).
+    - release/ and tooling/ capabilities describe pipeline and tooling behaviour,
+      verified by RSpec examples tagged requirement:/scenario:.
     - Reference greeter-core's requirement by name instead of restating a name rule.
   tasks:
     - First task group is always "Red tests" and lists every feature/spec file to write.

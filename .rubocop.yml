@@ -45,15 +45,24 @@ RSpec/SpecFilePathFormat:
   Enabled: false
 
 # Security specs and the exe subprocess spec describe behaviours, not one class.
+# The live-docs tooling specs test spec-side tooling, not a Greeter class, and
+# the trace fixtures are tag lists or child-run suites, not specs of a class.
 RSpec/DescribeClass:
   Exclude:
     - "spec/security/**/*"
     - "spec/unit/exe/**/*"
+    - "spec/trace_check_spec.rb"
+    - "spec/unit/support/*_spec.rb"
+    - "spec/fixtures/**/*"
 
-# Security examples are inherently multi-step.
+# Security examples are inherently multi-step, and so are the live-docs
+# tooling examples (one aggregate_failures example per scenario).
 RSpec/ExampleLength:
   Exclude:
     - "spec/security/**/*"
+    - "spec/trace_check_spec.rb"
+    - "spec/unit/support/*_spec.rb"
+    - "spec/workflows/ci_contract_spec.rb"
 
 RSpec/MultipleExpectations:
   Exclude:
@@ -66,4 +75,30 @@ RSpec/LeakyLocalVariable:
   Exclude:
     - "spec/security/**/*"
 
+# Fixtures must not end in _spec.rb, so the suite never loads them.
+RSpec/SpecFilePathSuffix:
+  Exclude:
+    - "spec/fixtures/**/*"
 
+# The live-docs tooling specs need a temp dir, paths, a sha and fixture
+# documents per example group.
+RSpec/MultipleMemoizedHelpers:
+  Exclude:
+    - "spec/unit/support/*_spec.rb"
+    - "spec/unit/bin/merge_repo_trace_spec.rb"
+    - "spec/workflows/ci_contract_spec.rb"
+
+# Fixture examples only need a trivial pass or fail; their status is the point.
+RSpec/IdenticalEqualityAssertion:
+  Exclude:
+    - "spec/fixtures/**/*"
+
+RSpec/ExpectActual:
+  Exclude:
+    - "spec/fixtures/**/*"
+
+# Tagged wrapper contexts in the tag-only fixtures are named after the
+# requirement, which does not start with when/with/without.
+RSpec/ContextWording:
+  Exclude:
+    - "spec/fixtures/tag_only/**/*"

@@ -20,7 +20,8 @@ RSpec.describe 'bin/check-acceptance-ref' do
     expect(File.executable?(script)).to be(true)
   end
 
-  context 'when the gate ref and acceptance_ref match and are vX.Y.Z' do
+  context 'when the gate ref and acceptance_ref match and are vX.Y.Z',
+          requirement: 'gate-ref-and-acceptance-ref-must-agree', scenario: 'matching-semver-refs-pass' do
     it 'exits 0' do
       _out, _err, status = run_check('matching.yml')
       expect(status.exitstatus).to eq(0)
@@ -32,7 +33,8 @@ RSpec.describe 'bin/check-acceptance-ref' do
     end
   end
 
-  context 'when the gate ref differs from acceptance_ref' do
+  context 'when the gate ref differs from acceptance_ref',
+          requirement: 'gate-ref-and-acceptance-ref-must-agree', scenario: 'mismatched-refs-fail' do
     it 'exits non-zero' do
       _out, _err, status = run_check('mismatched.yml')
       expect(status).not_to be_success
@@ -44,7 +46,8 @@ RSpec.describe 'bin/check-acceptance-ref' do
     end
   end
 
-  context 'when the gate ref is not vX.Y.Z' do
+  context 'when the gate ref is not vX.Y.Z',
+          requirement: 'gate-ref-and-acceptance-ref-must-agree', scenario: 'non-semver-ref-fails' do
     it 'exits non-zero' do
       _out, _err, status = run_check('non_semver_ref.yml')
       expect(status).not_to be_success
@@ -56,7 +59,8 @@ RSpec.describe 'bin/check-acceptance-ref' do
     end
   end
 
-  context 'when acceptance_ref is not vX.Y.Z' do
+  context 'when acceptance_ref is not vX.Y.Z',
+          requirement: 'gate-ref-and-acceptance-ref-must-agree', scenario: 'non-semver-ref-fails' do
     it 'exits non-zero' do
       _out, _err, status = run_check('non_semver_input.yml')
       expect(status).not_to be_success

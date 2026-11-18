@@ -49,7 +49,9 @@ RSpec.describe 'cd.yml contract' do
     jobs.fetch(name).to_yaml.scan(/\$\{\{.*?\}\}/).uniq
   end
 
-  describe 'Gate failure stops the release' do
+  describe 'Gate failure stops the release',
+           requirement: 'failed-acceptance-gate-blocks-release-and-announcement',
+           scenario: 'gate-failure-stops-the-release' do
     it 'makes release and announce depend on the gate chain', :aggregate_failures do
       expect(needs_of('release')).to include('package', 'gate')
       expect(needs_of('announce')).to include('release')
@@ -61,7 +63,9 @@ RSpec.describe 'cd.yml contract' do
     end
   end
 
-  describe 'Gate passes and release uses the same tarball' do
+  describe 'Gate passes and release uses the same tarball',
+           requirement: 'release-is-published-from-the-tested-tarball',
+           scenario: 'gate-passes-and-release-uses-the-same-tarball' do
     let(:release_steps) do
       step_positions('release', { uses: 'actions/download-artifact' }, { run: 'sha256sum -c' },
                      { uses: 'softprops/action-gh-release' })
@@ -81,7 +85,9 @@ RSpec.describe 'cd.yml contract' do
     end
   end
 
-  describe 'Release is announced to both environments' do
+  describe 'Release is announced to both environments',
+           requirement: 'released-versions-are-announced-for-prod-and-stage',
+           scenario: 'release-is-announced-to-both-environments' do
     let(:dispatch) { find_step('announce', run: 'gh api') }
 
     it 'fans out over exactly prod and stage', :aggregate_failures do
@@ -99,7 +105,9 @@ RSpec.describe 'cd.yml contract' do
     end
   end
 
-  describe 'Announce has no ambient token rights' do
+  describe 'Announce has no ambient token rights',
+           requirement: 'announce-holds-only-a-single-repository-app-token',
+           scenario: 'announce-has-no-ambient-token-rights' do
     let(:mint) { find_step('announce', uses: 'actions/create-github-app-token@v3') }
 
     it 'declares empty permissions', :aggregate_failures do
@@ -123,7 +131,9 @@ RSpec.describe 'cd.yml contract' do
     end
   end
 
-  describe 'Matching semver refs pass' do
+  describe 'Matching semver refs pass',
+           requirement: 'gate-ref-and-acceptance-ref-must-agree',
+           scenario: 'matching-semver-refs-pass' do
     let(:gate) { jobs.fetch('gate') }
     let(:uses_ref) do
       gate['uses'][%r{\Agreeterhq/greeter-acceptance/\.github/workflows/gate\.yml@(v\d+\.\d+\.\d+)\z}, 1]

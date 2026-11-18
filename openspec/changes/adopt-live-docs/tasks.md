@@ -31,7 +31,7 @@ The maintainer runs `tests-open` before apply and `tests-close` after it.
 - [x] 2.8 (S8) Use the tightened location patterns in `spec/support/repo_trace/document.rb`. The formatter, the Cucumber writer and `bin/merge-repo-trace` all validate through it. Verify: the 1.9 cases pass.
 - [x] 2.9 (S9) In `bin/merge-repo-trace`, validate each input's `schema`, `repo`, `sha`, `run_id` and `recorded_at` before comparing the two inputs. Have the writers emit `recorded_at` as `YYYY-MM-DDTHH:MM:SSZ`. Verify: the 1.10 cases pass.
 - [x] 2.10 (S10) In `ci.yml`, set `permission-contents: write` on the `notify-docs` mint step, place it directly before the dispatch step, and don't set `skip-token-revoke`. Verify: the 1.11 examples pass.
-- [ ] 2.11 Manual, outside the repo: set `DISPATCH_APP_CLIENT_ID` and `DISPATCH_APP_PRIVATE_KEY`, and install the App on `greeter-docs` with Contents write.
+- [x] 2.11 Manual, outside the repo: set `DISPATCH_APP_CLIENT_ID` and `DISPATCH_APP_PRIVATE_KEY`, and install the App on `greeter-docs` with Contents write.
 
 ## 3. Verify and docs
 

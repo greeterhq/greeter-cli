@@ -112,7 +112,7 @@ fileignoreconfig:
 - filename: openspec/changes/adopt-live-docs/proposal.md
   checksum: 18337d69c7f4903635772092487ee3d8d0f5a8171731f8a00abfec35b37d9678
 - filename: openspec/changes/adopt-live-docs/tasks.md
-  checksum: c923a5c3d77dd8a4a6b8e926b3403095349802c2c7c3f208c756eb71c9acadee
+  checksum: 5d835c6db1959c0513fd85a4a4973f6af1006daa5afeef5b0da1302bf0d96f06
 - filename: openspec/changes/adopt-live-docs/design.md
   checksum: c0bb02baeab55c1572d2057ce24224f82f234a48eba4ba5642de4ef6680e3508
 - filename: openspec/changes/adopt-live-docs/specs/tooling/live-docs-traceability/spec.md

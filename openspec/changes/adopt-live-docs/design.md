@@ -350,6 +350,12 @@ the dispatch to greeter-docs. There are three trust boundaries:
 - A regex scan can be fooled by tag text inside a comment or string. This is
   accepted because the scan is simple and needs no Node or CLI, and fixtures
   are excluded from it.
+  - Rule: test data that needs requirement/scenario values must use string
+    keys (`'requirement' => ...`) or live in `spec/fixtures/`. Comments in
+    scanned files must not contain the literal tag form either. During apply,
+    `spec/unit/support/repo_trace_document_spec.rb` had two such tables (one
+    with bad values, one silently counted as coverage), and so did a comment in
+    `spec/support/repo_trace/tag_only_diff.rb`. All three now follow the rule.
 - Adding tags may push `describe` lines over RuboCop's line length. Wrapping is
   allowed, because the tag-only check ignores whitespace.
 - `notify-docs` fails until the credentials and the App installation exist.

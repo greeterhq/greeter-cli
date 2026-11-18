@@ -51,7 +51,7 @@ fileignoreconfig:
 - filename: .github/workflows/cd.yml
   checksum: 77090aa8952a2952cf1da2de86e4294500e55b4f6326bc8ed37c32c5b59906d2
 - filename: .github/workflows/ci.yml
-  checksum: 1381768bd22e0a789132a0f19d0dce52864c3586b47ddb7688d3f4c7668a3811
+  checksum: 73753c52a65dfc5a1ffc098a9dc1b8e061f45befb3f90030058d1339896869b1
 - filename: .kiro/prompts/opsx-continue.prompt.md
   checksum: e85c9fb03a8d32ba394c81ad9b71d9214fbfe4965deaf15f1e896bb13714912a
 - filename: .kiro/prompts/opsx-ff.prompt.md
@@ -114,9 +114,17 @@ fileignoreconfig:
 - filename: openspec/changes/adopt-live-docs/tasks.md
   checksum: c923a5c3d77dd8a4a6b8e926b3403095349802c2c7c3f208c756eb71c9acadee
 - filename: openspec/changes/adopt-live-docs/design.md
-  checksum: ef52d82736e9cd002b9d20ae97fd1f6e7ae9f65ce41cb0a8ca03db2df19961f9
+  checksum: c0bb02baeab55c1572d2057ce24224f82f234a48eba4ba5642de4ef6680e3508
 - filename: openspec/changes/adopt-live-docs/specs/tooling/live-docs-traceability/spec.md
   checksum: aee4f9c3ac6e711401bcadd3bc4df348eac4fbf4d1d2da34c0d9a5e615f64b51
+- filename: features/support/repo_trace.rb
+  checksum: c14ecc5f847342016f05a5ee3221be9a4f5b8a84593dabdcd4a5305c4d4f25fc
+- filename: spec/support/repo_trace/document.rb
+  checksum: 5707cbcb7b03baa2120c6e31a34ed9a47206dfe95584e2ecebed330fd57f4eb8
+- filename: spec/support/repo_trace_formatter.rb
+  checksum: cdbf6ea6b55a65e9be04cb928ac0bb9ee9a67ea5da0e5b3f40d324115b81502d
+- filename: bin/merge-repo-trace
+  checksum: bf1357e7fd2f3a7f92411e962316808e37c639d90205d09411860be00cea207e
 - filename: openspec/changes/archive/2026-09-25-add-hello-world-greeting/proposal.md
   checksum: bef1d309e3e9f6825e3dbab324ad77806bbaf1f75dad06ffa69a4234396b3b0c
 - filename: openspec/changes/archive/2026-09-25-add-hello-world-greeting/tasks.md
@@ -136,7 +144,7 @@ fileignoreconfig:
 - filename: spec/unit/bin/merge_repo_trace_spec.rb
   checksum: 95147692f7bd662843c73339caa73819fa8913adfdfe28ba76e0a17ad0b69459
 - filename: spec/unit/support/repo_trace_document_spec.rb
-  checksum: 036ee07b0b92db2c4bd282fd6cf441dddc1f823ffd384d09b1eea01cb7c53bdf
+  checksum: 9422669c4f3e2dd6e9e5a1baec1707560bf07c15a39c28955e2af35bab505757
 - filename: spec/unit/support/slug_spec.rb
   checksum: 310877f850d9b810dbf2ad649ae9893407edea9c73a49a5c02829113f677ff99
 - filename: spec/workflows/ci_contract_spec.rb

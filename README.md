@@ -136,6 +136,31 @@ bundle exec cucumber     # CLI behaviour scenarios; runs the real exe/greeter as
 bundle exec rubocop      # lint
 ```
 
+### Repo trace (live docs)
+
+greeter-docs reads which requirements this repo has and how their tests did.
+Every `### Requirement:` heading under `openspec/specs/**/spec.md` (and the
+ADDED/MODIFIED sections of open changes) needs at least one tagged test:
+RSpec `requirement: '<slug>', scenario: '<slug>'` or Cucumber
+`@requirement-<slug> @scenario-<slug>`. A slug is the heading text lowercased,
+each run of characters other than `a-z0-9` replaced by `-`, with `-` trimmed
+from both ends (`Surfaces control/escape characters as an error` ->
+`surfaces-control-escape-characters-as-an-error`). `spec/trace_check_spec.rb`
+fails, naming the requirement or tag, when a heading has no tagged test or a
+tag matches no heading.
+
+```bash
+bundle exec rspec --format progress --format RepoTraceFormatter  # writes tmp/repo-trace-spec.json
+bundle exec cucumber                                             # writes tmp/repo-trace-bdd.json
+bin/merge-repo-trace tmp/repo-trace.json tmp/repo-trace-spec.json tmp/repo-trace-bdd.json
+```
+
+`REPO_TRACE_PATH` overrides either writer's output path. The trace
+(`greeterhq.repo-trace.v1`) holds only slugs, statuses, locations and run
+metadata, never test descriptions. CI uploads it as the `repo-trace` artifact
+on pushes to `main` and every Monday, then sends `docs-refresh` to
+greeter-docs.
+
 ## Architecture
 
 Hexagonal. Dependencies point inward only; adapters depend on `greeter-core`,

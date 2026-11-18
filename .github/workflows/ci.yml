@@ -10,8 +10,13 @@
 #  perf      – greeting_bench.rb (Performance Test)                 │
 #  spec-gate – openspec validate (OpenSpec)                         ┘
 #
+#  trace       – merges repo-trace-spec + repo-trace-bdd into the
+#                "repo-trace" artifact (push to main and weekly only)
+#  notify-docs – sends docs-refresh to greeterhq/greeter-docs (same gate)
+#
 # Releasing lives in cd.yml, which runs via workflow_run only after this
-# workflow finishes green for a v* tag push.
+# workflow finishes green for a v* tag push. The weekly schedule also starts a
+# CD run, but its package guard skips every job, so no release is created.
 
 name: CI
 
@@ -21,6 +26,12 @@ name: CI
     tags: ["v*"]
   pull_request:
     branches: ["**"]
+  schedule:
+    - cron: '17 6 * * 1'
+
+# Every job reads only; notify-docs drops even that and uses an App token.
+permissions:
+  contents: read
 
 # Cancel in-flight runs for the same ref so a fast-follow push doesn't queue.
 concurrency:
@@ -87,7 +98,9 @@ jobs:
         run: mkdir -p coverage
 
       - name: Run RSpec
-        run: bundle exec rspec --format progress --format html --out coverage/rspec.html
+        env:
+          REPO_TRACE_PATH: tmp/repo-trace-spec.json
+        run: bundle exec rspec --format progress --format html --out coverage/rspec.html --format RepoTraceFormatter
 
       - name: Upload SimpleCov HTML report
         if: always()
@@ -96,6 +109,15 @@ jobs:
           name: simplecov-report
           path: coverage/
           retention-days: 14
+
+      # Only after a green run: a red job publishes no trace.
+      - name: Upload repo trace (RSpec)
+        uses: actions/upload-artifact@v6
+        with:
+          name: repo-trace-spec
+          path: tmp/repo-trace-spec.json
+          retention-days: 1
+          if-no-files-found: error
 
 # ─────────────────────────────────────────────────────────────────────────────
 # bdd  (Functional Tests — gated on lint)
@@ -118,6 +140,8 @@ jobs:
         run: mkdir -p tmp
 
       - name: Run Cucumber
+        env:
+          REPO_TRACE_PATH: tmp/repo-trace-bdd.json
         run: bundle exec cucumber --format progress
 
       - name: Upload traceability report
@@ -127,6 +151,15 @@ jobs:
           name: traceability-report
           path: tmp/traceability.json
           retention-days: 14
+
+      # Only after a green run: a red job publishes no trace.
+      - name: Upload repo trace (Cucumber)
+        uses: actions/upload-artifact@v6
+        with:
+          name: repo-trace-bdd
+          path: tmp/repo-trace-bdd.json
+          retention-days: 1
+          if-no-files-found: error
 
 # ─────────────────────────────────────────────────────────────────────────────
 # security  (Security Test — gated on lint)
@@ -206,3 +239,79 @@ jobs:
 
       - name: Validate all OpenSpec changes
         run: openspec validate --all --strict --json --no-interactive
+
+# ─────────────────────────────────────────────────────────────────────────────
+# trace  (merge the per-job repo traces — push to main and weekly only)
+# ─────────────────────────────────────────────────────────────────────────────
+  trace:
+    name: Repo trace
+    runs-on: ubuntu-latest
+    needs: [spec, bdd]
+    if: github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      # bin/merge-repo-trace uses the standard library only; no bundle needed.
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+
+      # By name from this run only, each into its own directory.
+      - name: Download RSpec trace
+        uses: actions/download-artifact@v7
+        with:
+          name: repo-trace-spec
+          path: tmp/trace-spec
+
+      - name: Download Cucumber trace
+        uses: actions/download-artifact@v7
+        with:
+          name: repo-trace-bdd
+          path: tmp/trace-bdd
+
+      - name: Merge traces
+        run: bin/merge-repo-trace tmp/repo-trace.json tmp/trace-spec/repo-trace-spec.json tmp/trace-bdd/repo-trace-bdd.json
+
+      - name: Upload repo trace
+        uses: actions/upload-artifact@v6
+        with:
+          name: repo-trace
+          path: tmp/repo-trace.json
+          retention-days: 90
+          if-no-files-found: error
+
+# ─────────────────────────────────────────────────────────────────────────────
+# notify-docs  (tell greeter-docs to refresh — same gate as trace)
+# ─────────────────────────────────────────────────────────────────────────────
+  notify-docs:
+    name: Notify greeter-docs
+    runs-on: ubuntu-latest
+    needs: trace
+    if: github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    permissions: {}
+
+    steps:
+      # Minted just before use, for greeter-docs only, with contents: write
+      # (the right repository_dispatch needs). Revoked when the job ends.
+      - name: Mint greeter-docs token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.DISPATCH_APP_CLIENT_ID }}
+          private-key: ${{ secrets.DISPATCH_APP_PRIVATE_KEY }}
+          owner: greeterhq
+          repositories: greeter-docs
+          permission-contents: write
+
+      - name: Send docs-refresh
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: >-
+          gh api repos/greeterhq/greeter-docs/dispatches
+          -f event_type=docs-refresh
+          -f client_payload[repo]=greeter-cli

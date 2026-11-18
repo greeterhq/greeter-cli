@@ -112,11 +112,11 @@ fileignoreconfig:
 - filename: openspec/changes/adopt-live-docs/proposal.md
   checksum: 18337d69c7f4903635772092487ee3d8d0f5a8171731f8a00abfec35b37d9678
 - filename: openspec/changes/adopt-live-docs/tasks.md
-  checksum: 17295da72d2ea0516516423b750988d3f55acbd108e34626a045517a19528347
+  checksum: c923a5c3d77dd8a4a6b8e926b3403095349802c2c7c3f208c756eb71c9acadee
 - filename: openspec/changes/adopt-live-docs/design.md
-  checksum: 74b4cf0a2d5c5a6b259ae040b9d3313109384a6d570165404cfdabeb7317ed39
-- filename: openspec/changes/adopt-live-docs/specs/traceability/repo-trace/spec.md
-  checksum: aff8795aa5752a73017eabb61394736b142aa3f27799965891684948323295a5
+  checksum: ef52d82736e9cd002b9d20ae97fd1f6e7ae9f65ce41cb0a8ca03db2df19961f9
+- filename: openspec/changes/adopt-live-docs/specs/tooling/live-docs-traceability/spec.md
+  checksum: aee4f9c3ac6e711401bcadd3bc4df348eac4fbf4d1d2da34c0d9a5e615f64b51
 - filename: openspec/changes/archive/2026-09-25-add-hello-world-greeting/proposal.md
   checksum: bef1d309e3e9f6825e3dbab324ad77806bbaf1f75dad06ffa69a4234396b3b0c
 - filename: openspec/changes/archive/2026-09-25-add-hello-world-greeting/tasks.md

@@ -132,7 +132,7 @@ bundle config unset --local local.greeter-core
 
 ```bash
 bundle exec rspec        # unit + security specs
-bundle exec cucumber     # CLI behaviour scenarios
+bundle exec cucumber     # CLI behaviour scenarios; runs the real exe/greeter as a subprocess
 bundle exec rubocop      # lint
 ```
 

@@ -108,7 +108,7 @@ fileignoreconfig:
 - filename: bin/check-acceptance-ref
   checksum: 85f62f2d90be978eb59534a24ad95701849df314f6fd4f0ac616b05127a595ff
 - filename: features/support/env.rb
-  checksum: 82212114dad225e29e5f8afa8867362c378ac9f1b8c07165728810830cab7964
+  checksum: 6b7479420f5b7c3a761a012ec0d5f18cb4f9df7d314a97f64dbc1883a5ae1cf6
 - filename: openspec/changes/archive/2026-09-25-add-hello-world-greeting/proposal.md
   checksum: bef1d309e3e9f6825e3dbab324ad77806bbaf1f75dad06ffa69a4234396b3b0c
 - filename: openspec/changes/archive/2026-09-25-add-hello-world-greeting/tasks.md

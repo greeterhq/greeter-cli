@@ -1,43 +1,22 @@
 # frozen_string_literal: true
 
-$LOAD_PATH.unshift(File.join(__dir__, '..', '..', 'lib'))
+require 'open3'
+require 'rbconfig'
 
-require 'stringio'
-require 'greeter/core'
-require 'greeter/core/testing'
-require 'greeter/adapters/cli_presenter'
-
+# Runs the real exe/greeter as a subprocess so the features observe what a CLI
+# user observes: exit status, stdout and stderr. Argv form, no shell involved.
 module GreeterWorld
-  def stdout_io
-    @stdout_io ||= StringIO.new
-  end
-
-  def stderr_io
-    @stderr_io ||= StringIO.new
-  end
-
-  def fixed_clock
-    @fixed_clock ||= Greeter::Core::Testing::FixedClock.new(Time.utc(2024, 6, 1, 9, 0, 0))
-  end
-
-  def presenter
-    @presenter ||= Greeter::Adapters::CliPresenter.new(output: stdout_io)
-  end
-
-  def service
-    @service ||= Greeter::Core::Domain::GreetingService.new(clock: fixed_clock)
-  end
+  EXE_PATH = File.expand_path('../../exe/greeter', __dir__)
 
   def invoke_cli(raw_name)
-    @exit_code = 0
-    service.greet(raw_name).tap { |g| presenter.present(g) }
-  rescue Greeter::Core::Domain::InvalidGuestName => e
-    @exit_code = 2
-    stderr_io.puts(e.message)
+    @stdout, @stderr, status = Open3.capture3(RbConfig.ruby, EXE_PATH, raw_name)
+    @exit_code = status.exitstatus
   end
 
+  attr_reader :stdout, :stderr
+
   def exit_code
-    @exit_code ||= 0
+    @exit_code
   end
 end
 

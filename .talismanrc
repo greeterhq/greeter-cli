@@ -109,14 +109,6 @@ fileignoreconfig:
   checksum: 85f62f2d90be978eb59534a24ad95701849df314f6fd4f0ac616b05127a595ff
 - filename: features/support/env.rb
   checksum: 6b7479420f5b7c3a761a012ec0d5f18cb4f9df7d314a97f64dbc1883a5ae1cf6
-- filename: openspec/changes/adopt-live-docs/proposal.md
-  checksum: 18337d69c7f4903635772092487ee3d8d0f5a8171731f8a00abfec35b37d9678
-- filename: openspec/changes/adopt-live-docs/tasks.md
-  checksum: 5d835c6db1959c0513fd85a4a4973f6af1006daa5afeef5b0da1302bf0d96f06
-- filename: openspec/changes/adopt-live-docs/design.md
-  checksum: c0bb02baeab55c1572d2057ce24224f82f234a48eba4ba5642de4ef6680e3508
-- filename: openspec/changes/adopt-live-docs/specs/tooling/live-docs-traceability/spec.md
-  checksum: aee4f9c3ac6e711401bcadd3bc4df348eac4fbf4d1d2da34c0d9a5e615f64b51
 - filename: features/support/repo_trace.rb
   checksum: c14ecc5f847342016f05a5ee3221be9a4f5b8a84593dabdcd4a5305c4d4f25fc
 - filename: spec/support/repo_trace/document.rb
@@ -133,6 +125,8 @@ fileignoreconfig:
   checksum: 1662ec6410f25d27c4283dd5170b870dcaa20b5901b132c38ae4d0f5ac969fe6
 - filename: openspec/specs/release/acceptance-gate/spec.md
   checksum: df25de0674b861a76a5f368f3e2e91c0525d70d8824195dd99341cc9f8b61d72
+- filename: openspec/specs/tooling/live-docs-traceability/spec.md
+  checksum: a7cc5906befb68632f9b3dc8ee0bd13ef66a7c360422beda5d77e6f196f8587f
 - filename: spec/unit/support/repo_trace_formatter_spec.rb
   checksum: 29a0f2c5cb31dd76030c3e4868ef180a626a319125dd9ea718c1f9bca617cf18
 - filename: spec/unit/support/cucumber_repo_trace_spec.rb

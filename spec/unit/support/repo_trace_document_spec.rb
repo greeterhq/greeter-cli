@@ -9,10 +9,11 @@ require 'spec_helper'
 RSpec.describe 'RepoTrace::Document',
                requirement: 'repo-trace-contains-only-slugs-statuses-locations-and-run-metadata',
                scenario: 'writers-refuse-malformed-values' do
+  # String keys, so the trace check's text scan doesn't read these values as tags.
   def result(**overrides)
-    RepoTrace::Document.result(requirement: 'greets-a-named-guest', scenario: 'greets-a-named-guest',
-                               status: 'passed', source: 'rspec', location: 'spec/unit/bin/x_spec.rb:12',
-                               **overrides)
+    valid = { 'requirement' => 'greets-a-named-guest', 'scenario' => 'greets-a-named-guest',
+              'status' => 'passed', 'source' => 'rspec', 'location' => 'spec/unit/bin/x_spec.rb:12' }
+    RepoTrace::Document.result(**valid.transform_keys(&:to_sym), **overrides)
   end
 
   it 'accepts a nested spec location for rspec' do
@@ -44,14 +45,15 @@ RSpec.describe 'RepoTrace::Document',
     end
   end
 
+  # String keys, so the trace check's text scan doesn't read these bad values as tags.
   {
-    requirement: 'Alice Smith',
-    scenario: 'Not_A_Slug',
-    status: 'broken',
-    source: 'junit'
+    'requirement' => 'Alice Smith',
+    'scenario' => 'Not_A_Slug',
+    'status' => 'broken',
+    'source' => 'junit'
   }.each do |field, value|
     it "refuses an invalid #{field}, without echoing it", :aggregate_failures do
-      expect { result(field => value) }.to raise_error do |error|
+      expect { result(field.to_sym => value) }.to raise_error do |error|
         expect(error.message).to start_with("invalid #{field}")
         expect(error.message).not_to include(value)
       end
